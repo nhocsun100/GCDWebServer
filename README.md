@@ -467,3 +467,30 @@ Final Example: File Downloads and Uploads From iOS App
 GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad. It allow users to connect to their iPad with their web browser over WiFi and then upload, download and organize comic files inside the app.
 
 ComicFlow is [entirely open-source](https://github.com/swisspol/ComicFlow) and you can see how it uses GCDWebServer in the [WebServer.h](https://github.com/swisspol/ComicFlow/blob/master/Classes/WebServer.h) and [WebServer.m](https://github.com/swisspol/ComicFlow/blob/master/Classes/WebServer.m) files.
+
+Example: Host a Canvas App that Uploads to Firebase
+===================================================
+
+If you already have a client-side web app (for example, a canvas drawing page that uploads PNG snapshots to Firebase Storage and writes metadata to Firestore), you can host it directly from your iOS app bundle with GCDWebServer.
+
+1. Add your `index.html` (and any CSS/JS assets) to a `Website/` folder in your app bundle.
+2. Serve that folder with a static handler:
+
+```objectivec
+NSString* websitePath = [[NSBundle mainBundle] pathForResource:@"Website" ofType:nil];
+[webServer addGETHandlerForBasePath:@"/"
+                      directoryPath:websitePath
+                      indexFilename:@"index.html"
+                           cacheAge:0
+                 allowRangeRequests:NO];
+```
+
+Then open `http://<device-ip>:<port>/` from another device on the same network to use your canvas page.
+
+A minimal browser-side page can:
+- draw to `<canvas>` with pointer events,
+- call `canvas.toDataURL('image/png')`,
+- upload with Firebase Storage `uploadString(..., 'data_url')`,
+- store `{ filename, path, url, createdAt }` in Firestore.
+
+This keeps drawing and cloud sync logic in web code while GCDWebServer simply serves the files locally.
